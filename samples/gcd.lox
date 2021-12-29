@@ -1,0 +1,6 @@
+fun gcd (a, b) {
+    if (b == 0) return a;
+    return gcd(b, mod(a, b));
+}
+
+print gcd(160, 720);

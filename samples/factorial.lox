@@ -1,0 +1,21 @@
+var time = clock();
+
+
+fun factIter(n) {
+    if(n < 2) return 1;
+    var res = 1;
+    while (n > 2) {
+        n--;
+        res = res * n;
+    }
+    return res;
+}
+
+fun factRec(n) {
+    if(n < 2) return 1;
+    return n * factRec(n-1);
+}
+
+print factIter(40);
+
+print clock() - time + "ms";

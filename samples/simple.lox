@@ -1,0 +1,5 @@
+fun func (arg) {
+    return;
+}
+
+func(1);
