@@ -1,8 +1,7 @@
-# goloxx
-[lox](https://github.com/munificent/craftinginterpreters/wiki/Lox-implementations) with an extra x
+# golox
 
 ## changes
-`
+
 - comments start with `#`
 - `0` is falsey
 - strings can be concatenated to boolean and number values
