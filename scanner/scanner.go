@@ -170,88 +170,98 @@ func (scanner *Scanner) string() token.Token {
 	return scanner.makeToken(tokentype.TOKEN_STRING)
 }
 
-func (scanner *Scanner) ScanToken() token.Token {
+func (scanner *Scanner) Scan(tokens chan token.Token) {
+	for !scanner.isAtEnd() {
+		scanner.skipWhitespace()
+		scanner.start = scanner.current
 
-	if scanner.isAtEnd() {
-		return scanner.makeToken(tokentype.TOKEN_EOF)
+		var token token.Token
+
+		c := scanner.advance()
+
+		if isAlpha(c) {
+			token = scanner.identifier()
+		}
+
+		if isDigit(c) {
+			token = scanner.number()
+		}
+
+		switch c {
+		case '[':
+			token = scanner.makeToken(tokentype.TOKEN_LEFT_BRACKET)
+		case ']':
+			token = scanner.makeToken(tokentype.TOKEN_RIGHT_BRACKET)
+		case '(':
+			token = scanner.makeToken(tokentype.TOKEN_LEFT_PAREN)
+		case ')':
+			token = scanner.makeToken(tokentype.TOKEN_RIGHT_PAREN)
+		case '{':
+			token = scanner.makeToken(tokentype.TOKEN_LEFT_BRACE)
+		case '}':
+			token = scanner.makeToken(tokentype.TOKEN_RIGHT_BRACE)
+		case ';':
+			token = scanner.makeToken(tokentype.TOKEN_SEMICOLON)
+		case ',':
+			token = scanner.makeToken(tokentype.TOKEN_COMMA)
+		case '.':
+			token = scanner.makeToken(tokentype.TOKEN_DOT)
+		case '-':
+			if scanner.match('-') {
+				token = scanner.makeToken(tokentype.TOKEN_MINUS_MINUS)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_MINUS)
+			}
+		case '+':
+			if scanner.match('+') {
+				token = scanner.makeToken(tokentype.TOKEN_PLUS_PLUS)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_PLUS)
+			}
+		case '/':
+			token = scanner.makeToken(tokentype.TOKEN_SLASH)
+		case '*':
+			token = scanner.makeToken(tokentype.TOKEN_STAR)
+
+			// One or two character tokens.
+		case '!':
+			if scanner.match('=') {
+				token = scanner.makeToken(tokentype.TOKEN_BANG_EQUAL)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_BANG)
+			}
+		case '=':
+			if scanner.match('=') {
+				token = scanner.makeToken(tokentype.TOKEN_EQUAL_EQUAL)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_EQUAL)
+			}
+		case '<':
+			if scanner.match('=') {
+				token = scanner.makeToken(tokentype.TOKEN_LESS_EQUAL)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_LESS)
+			}
+		case '>':
+			if scanner.match('=') {
+				token = scanner.makeToken(tokentype.TOKEN_GREATER_EQUAL)
+			} else {
+				token = scanner.makeToken(tokentype.TOKEN_GREATER)
+			}
+
+			// literal tokens
+		case '"':
+			token = scanner.string()
+		}
+
+		if scanner.isAtEnd() {
+			token = scanner.makeToken(tokentype.TOKEN_EOF)
+		} else if token.Lexeme == "" {
+			token = scanner.errorToken("Unexpected character!")
+		}
+
+		tokens <- token
 	}
 
-	scanner.skipWhitespace()
-	scanner.start = scanner.current
-
-	c := scanner.advance()
-
-	if isAlpha(c) {
-		return scanner.identifier()
-	}
-
-	if isDigit(c) {
-		return scanner.number()
-	}
-
-	switch c {
-	case '[':
-		return scanner.makeToken(tokentype.TOKEN_LEFT_BRACKET)
-	case ']':
-		return scanner.makeToken(tokentype.TOKEN_RIGHT_BRACKET)
-	case '(':
-		return scanner.makeToken(tokentype.TOKEN_LEFT_PAREN)
-	case ')':
-		return scanner.makeToken(tokentype.TOKEN_RIGHT_PAREN)
-	case '{':
-		return scanner.makeToken(tokentype.TOKEN_LEFT_BRACE)
-	case '}':
-		return scanner.makeToken(tokentype.TOKEN_RIGHT_BRACE)
-	case ';':
-		return scanner.makeToken(tokentype.TOKEN_SEMICOLON)
-	case ',':
-		return scanner.makeToken(tokentype.TOKEN_COMMA)
-	case '.':
-		return scanner.makeToken(tokentype.TOKEN_DOT)
-	case '-':
-		if scanner.match('-') {
-			return scanner.makeToken(tokentype.TOKEN_MINUS_MINUS)
-		}
-		return scanner.makeToken(tokentype.TOKEN_MINUS)
-	case '+':
-		if scanner.match('+') {
-			return scanner.makeToken(tokentype.TOKEN_PLUS_PLUS)
-		}
-		return scanner.makeToken(tokentype.TOKEN_PLUS)
-	case '/':
-		return scanner.makeToken(tokentype.TOKEN_SLASH)
-	case '*':
-		return scanner.makeToken(tokentype.TOKEN_STAR)
-
-	// One or two character tokens.
-	case '!':
-		if scanner.match('=') {
-			return scanner.makeToken(tokentype.TOKEN_BANG_EQUAL)
-		}
-		return scanner.makeToken(tokentype.TOKEN_BANG)
-	case '=':
-		if scanner.match('=') {
-			return scanner.makeToken(tokentype.TOKEN_EQUAL_EQUAL)
-		}
-		return scanner.makeToken(tokentype.TOKEN_EQUAL)
-	case '<':
-		if scanner.match('=') {
-			return scanner.makeToken(tokentype.TOKEN_LESS_EQUAL)
-		}
-		return scanner.makeToken(tokentype.TOKEN_LESS)
-	case '>':
-		if scanner.match('=') {
-			return scanner.makeToken(tokentype.TOKEN_GREATER_EQUAL)
-		}
-		return scanner.makeToken(tokentype.TOKEN_GREATER)
-
-	// literal tokens
-	case '"':
-		return scanner.string()
-	}
-
-	if scanner.isAtEnd() {
-		return scanner.makeToken(tokentype.TOKEN_EOF)
-	}
-	return scanner.errorToken("Unexpected character!")
+	close(tokens)
 }

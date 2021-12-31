@@ -18,12 +18,12 @@ import (
 )
 
 type Parser struct {
-	previous  token.Token
-	current   token.Token
-	scanner   *scanner.Scanner
-	compiler  *Compiler
 	panicMode bool
 	hadError  bool
+	compiler  *Compiler
+	previous  token.Token
+	current   token.Token
+	tokens    chan token.Token
 }
 
 type Compiler struct {
@@ -126,7 +126,7 @@ func (parser *Parser) advance() {
 	parser.previous = parser.current
 
 	for {
-		parser.current = parser.scanner.ScanToken()
+		parser.current = <-parser.tokens
 		if parser.current.Type != tokentype.TOKEN_ERROR {
 			break
 		}
@@ -877,11 +877,13 @@ func (parser *Parser) initCompiler(funcType functype.FuncType) *Compiler {
 func Compile(source *string) *value.ObjFunction {
 	var scanner scanner.Scanner
 	scanner.Init(source)
+	tokens := make(chan token.Token, 1024)
+	go scanner.Scan(tokens)
 
 	parser := new(Parser)
 	parser.hadError = false
 	parser.panicMode = false
-	parser.scanner = &scanner
+	parser.tokens = tokens
 	parser.compiler = parser.initCompiler(functype.TYPE_SCRIPT)
 
 	initRules()
@@ -891,8 +893,6 @@ func Compile(source *string) *value.ObjFunction {
 	for !parser.match(tokentype.TOKEN_EOF) {
 		parser.declaration()
 	}
-
-	parser.consume(tokentype.TOKEN_EOF, "Expect end of expression.")
 
 	function := parser.endCompiler()
 
