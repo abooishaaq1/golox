@@ -7,6 +7,8 @@
 - `0` is falsey
 - strings can be concatenated to boolean and number values
 - first part of for can only have an initializer 
+- implements lists
+- doesn't support classes
 
 ## todo
 
@@ -14,7 +16,3 @@
 - compiled files
 - more than 256 local varibles
 - lessen similar shortcomings of the compiler
-
-### advanced
-
-wite a library
