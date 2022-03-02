@@ -34,7 +34,7 @@ func isAlpha(c rune) bool {
 }
 
 func (scanner *Scanner) isAtEnd() bool {
-	return len(*scanner.source) == scanner.current || scanner.currChar() == '\x00'
+	return len(*scanner.source) == scanner.current
 }
 
 func (scanner *Scanner) advance() rune {
@@ -222,8 +222,6 @@ func (scanner *Scanner) Scan(tokens chan token.Token) {
 			token = scanner.makeToken(tokentype.TOKEN_SLASH)
 		case '*':
 			token = scanner.makeToken(tokentype.TOKEN_STAR)
-
-			// One or two character tokens.
 		case '!':
 			if scanner.match('=') {
 				token = scanner.makeToken(tokentype.TOKEN_BANG_EQUAL)
@@ -248,8 +246,6 @@ func (scanner *Scanner) Scan(tokens chan token.Token) {
 			} else {
 				token = scanner.makeToken(tokentype.TOKEN_GREATER)
 			}
-
-			// literal tokens
 		case '"':
 			token = scanner.string()
 		}
