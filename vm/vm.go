@@ -228,6 +228,15 @@ func (vm *VM) captureUpvalue(l *value.Value) *value.ObjUpvalue {
 	return upvalue
 }
 
+func (vm *VM) removeUpvalue(l *value.Value) {
+	for i, up := range vm.openUpvalues {
+		if up.Location == l {
+			vm.openUpvalues = append(vm.openUpvalues[:i], vm.openUpvalues[i+1:]...)
+			return
+		}
+	}
+}
+
 func (vm *VM) run() interpretresult.InterpretResult {
 	frame := &vm.frames[len(vm.frames)-1]
 
@@ -241,6 +250,7 @@ func (vm *VM) run() interpretresult.InterpretResult {
 				fmt.Printf(" ]")
 			}
 			fmt.Println()
+			// fmt.Printf("\t  upvalues: %v\n", vm.openUpvalues)
 		}
 
 		switch vm.readByte() {
@@ -290,7 +300,13 @@ func (vm *VM) run() interpretresult.InterpretResult {
 		case opcode.OP_NOT:
 			vm.push(value.ValBool(!vm.pop().IsTruey()))
 		case opcode.OP_POP:
-			vm.pop()
+			val := vm.pop()
+			if val.Type == valuetype.VAL_OBJ && val.AsObj().Type == objtype.OBJ_CLOSURE {
+				closure := val.AsObjClosure()
+				for _, up := range closure.Upvalues {
+					vm.removeUpvalue(up.Location)
+				}
+			}
 		case opcode.OP_PRINT:
 			vm.pop().Print()
 			fmt.Println()

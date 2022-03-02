@@ -1,24 +1,22 @@
-var globalOne;
-var globalTwo;
+fun makeClosure() {
+  var a = "data";
 
-fun main() {
-  {
-    var a = "one";
-    fun one() {
-      print a;
-    }
-    globalOne = one;
-  }
-
-  {
-    var a = "two";
-    fun two() {
-      print a;
-    }
-    globalTwo = two;
-  }
+  fun f() { print a; }
+  return f;
 }
 
-main();
-globalOne();
-globalTwo();
+var closure;
+
+{
+  closure = makeClosure();
+  closure();
+}
+
+{
+  var closure = makeClosure();
+  # GC here.
+  closure();
+}
+
+print "cool";
+closure();
